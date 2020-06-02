@@ -13,7 +13,7 @@ defmodule DependencyGraphTests do
     graph = DependencyGraph.new([
       %Job{name: "Test Job", command: "echo 'test'"}
     ])
-    
+
     assert DependencyGraph.nodes(graph)
       |> length == 1
   end
@@ -28,12 +28,11 @@ defmodule DependencyGraphTests do
 
     assert DependencyGraph.nodes(graph)
       |> length == 3
-    
+
     assert Map.get(graph, "Job 3").dependencies
       |> length == 2
 
     assert Map.get(graph, "Job 3").in_degree == 0
-
     assert Map.get(graph, "Job 1").in_degree == 1
   end
 
@@ -61,13 +60,13 @@ defmodule DependencyGraphTests do
     node1 = Map.get(graph, job1.name)
     node2 = Map.get(graph, job2.name)
 
-    newGraph = DependencyGraph.remove_edge(graph, node1, node2)
+    new_graph = DependencyGraph.remove_edge(graph, node1, node2)
 
-    newNode1 = Map.get(newGraph, job1.name)
-    newNode2 = Map.get(newGraph, job2.name)
+    new_node_1 = Map.get(new_graph, job1.name)
+    new_node_2 = Map.get(new_graph, job2.name)
 
-    assert Enum.empty?(newNode1.dependencies)
-    assert newNode2.in_degree == 0
+    assert Enum.empty?(new_node_1.dependencies)
+    assert new_node_2.in_degree == 0
   end
 
   test "Topological sort for an empty graph" do
@@ -138,7 +137,6 @@ defmodule DependencyGraphTests do
       {:ok, result} -> perform_assertions.(result)
       {:error, message} -> assert(false, message)
     end
-    
   end
 
   test "Reports an error if there is a cyclic dependency in the tasks" do

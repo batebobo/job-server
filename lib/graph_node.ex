@@ -1,4 +1,8 @@
 defmodule GraphNode do
+  @moduledoc """
+  Documentation for `GraphNode`.
+  Struct that represents a node in a Graph
+  """
   use TypedStruct
 
   typedstruct do

@@ -1,4 +1,8 @@
 defmodule Job do
+  @moduledoc """
+  Documentation for `Job`.
+  Struct that represents a job with dependencies
+  """
   use TypedStruct
 
   typedstruct do
