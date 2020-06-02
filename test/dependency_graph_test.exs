@@ -1,4 +1,5 @@
 defmodule DependencyGraphTests do
+  import GraphNode
   use ExUnit.Case
   doctest DependencyGraph
 
@@ -47,7 +48,7 @@ defmodule DependencyGraphTests do
     neighbours = DependencyGraph.neighbours(graph, Map.get(graph, job1.name))
 
     assert length(neighbours) == 2
-    assert Enum.map(neighbours, &(&1.job.name)) == ["B", "C"]
+    assert Enum.map(neighbours, &(name(&1))) == ["B", "C"]
   end
 
   test "Removes an edge between two vertices" do
@@ -64,8 +65,35 @@ defmodule DependencyGraphTests do
 
     newNode1 = Map.get(newGraph, job1.name)
     newNode2 = Map.get(newGraph, job2.name)
+
     assert Enum.empty?(newNode1.dependencies)
     assert newNode2.in_degree == 0
+  end
+
+  test "Topological sort for an empty graph" do
+    graph = DependencyGraph.new([])
+
+    case DependencyGraph.topological_sort(graph) do
+      {:ok, result} -> assert result == []
+      {:error, message} -> assert(false, "Should have returned an empty ordering for empty graph. Error message: #{message}")
+    end
+  end
+
+  test "Topological sort for a leaf" do
+    job = %Job{name: "A", command: "Command 1"}
+    graph = DependencyGraph.new([job])
+
+    perform_assertions = fn(result) ->
+      assert length(result) == 1
+      assert result
+        |> List.first
+        |> name == "A"
+    end
+
+    case DependencyGraph.topological_sort(graph) do
+      {:ok, result} -> perform_assertions.(result)
+      {:error, message} -> assert(false, "Should have returned the original node. Error message: #{message}")
+    end
   end
 
   test "Topological sort for a simple linear order" do
@@ -77,8 +105,11 @@ defmodule DependencyGraphTests do
       job1, job2, job3
     ])
 
-    {_, result} = DependencyGraph.topological_sort(graph)
-    assert Enum.map(result, &(&1.job.name)) == ["C", "B", "A"]
+    case DependencyGraph.topological_sort(graph) do
+      {:ok, result} -> assert Enum.map(result, &(name(&1) == ["C", "B", "A"]))
+      {:error, message} -> assert(false, message)
+    end
+
   end
 
   test "Finds the proper root nodes while topologically sorting" do
@@ -96,10 +127,32 @@ defmodule DependencyGraphTests do
       Enum.find_index(jobs, &(&1 == job_name))
     end
 
-    {_, result} = DependencyGraph.topological_sort(graph)
-    job_names_order = Enum.map(result, &(&1.job.name))
+    perform_assertions = fn (result) ->
+      job_names_order = Enum.map(result, &(name(&1)))
 
-    assert index_of.(job_names_order, "C") < index_of.(job_names_order, "A")
-    assert index_of.(job_names_order, "E") < index_of.(job_names_order, "C")
+      assert index_of.(job_names_order, "C") < index_of.(job_names_order, "A")
+      assert index_of.(job_names_order, "E") < index_of.(job_names_order, "C")
+    end
+
+    case DependencyGraph.topological_sort(graph) do
+      {:ok, result} -> perform_assertions.(result)
+      {:error, message} -> assert(false, message)
+    end
+    
+  end
+
+  test "Reports an error if there is a cyclic dependency in the tasks" do
+    job1 = %Job{name: "A", command: "Command 1", dependencies: ["B"]}
+    job2 = %Job{name: "B", command: "Command 2", dependencies: ["C"]}
+    job3 = %Job{name: "C", command: "Command 3", dependencies: ["A"]}
+
+    graph = DependencyGraph.new([
+      job1, job2, job3
+    ])
+
+    case DependencyGraph.topological_sort(graph) do
+      {:ok, _} -> assert(false, "Should have thrown an error")
+      {:error, _} -> assert true
+    end
   end
 end
