@@ -5,9 +5,10 @@ defmodule Job do
   """
   use TypedStruct
 
+  @derive{Poison.Encoder, except: [:requires]}
   typedstruct do
-    field :name, String.t(), enforce: true
-    field :command, String.t(), enforce: true
-    field :dependencies, list(String.t()), default: []
+    field :name, String.t()
+    field :command, String.t()
+    field :requires, list(String.t()), default: []
   end
 end

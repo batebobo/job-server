@@ -10,14 +10,14 @@ defmodule DependencyGraph do
         map
       end
       in_degree = Enum.count(jobs, fn job ->
-        Enum.any?(job.dependencies, &(&1 == x.name)) end)
+        Enum.any?(job.requires, &(&1 == x.name)) end)
       Map.put_new(
         map,
         x.name,
         %GraphNode{
           job: x,
           in_degree: in_degree,
-          dependencies: x.dependencies
+          dependencies: x.requires
         })
     end)
   end
@@ -58,7 +58,7 @@ defmodule DependencyGraph do
       new_result = Enum.concat([current_node], result)
       neighbours = neighbours(graph, current_node)
       {new_graph, newest_root_nodes} = Enum.reduce(neighbours, {graph, new_root_nodes}, fn neighbour, {current_graph, current_root_nodes} ->
-        g = remove_edge(currentGraph, current_node, neighbour)
+        g = remove_edge(current_graph, current_node, neighbour)
         if node(g, name(neighbour)).in_degree == 0 do
           {g, Enum.concat(current_root_nodes, [neighbour])}
         else
