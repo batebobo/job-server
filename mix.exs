@@ -23,7 +23,7 @@ defmodule Jobs.MixProject do
   defp deps do
     [
       {:typed_struct, "~> 0.2.0"},
-      {:credo, "~> 1.4", only: [:dev, :test], runtime: false},
+      {:credo, "~> 1.4", only: [:dev], runtime: false},
       {:poison, "~> 3.0"},
       {:plug, "~> 1.6"},
       {:cowboy, "~> 2.4"},

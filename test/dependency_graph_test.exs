@@ -21,7 +21,7 @@ defmodule DependencyGraphTests do
   test "Creates a node with two children" do
     job1 = %Job{name: "Job 1", command: "Command 1"}
     job2 = %Job{name: "Job 2", command: "Command 2"}
-    job3 = %Job{name: "Job 3", command: "Command 3", dependencies: ["Job 1", "Job 2"]}
+    job3 = %Job{name: "Job 3", command: "Command 3", requires: ["Job 1", "Job 2"]}
     graph = DependencyGraph.new([
       job1, job2, job3
     ])
@@ -37,7 +37,7 @@ defmodule DependencyGraphTests do
   end
 
   test "Gets neighbours of a given vertex" do
-    job1 = %Job{name: "A", command: "Command 1", dependencies: ["B", "C"]}
+    job1 = %Job{name: "A", command: "Command 1", requires: ["B", "C"]}
     job2 = %Job{name: "B", command: "Command 2"}
     job3 = %Job{name: "C", command: "Command 2"}
     graph = DependencyGraph.new([
@@ -51,7 +51,7 @@ defmodule DependencyGraphTests do
   end
 
   test "Removes an edge between two vertices" do
-    job1 = %Job{name: "A", command: "Command 1", dependencies: ["B"]}
+    job1 = %Job{name: "A", command: "Command 1", requires: ["B"]}
     job2 = %Job{name: "B", command: "Command 2"}
     graph = DependencyGraph.new([
       job1, job2
@@ -96,8 +96,8 @@ defmodule DependencyGraphTests do
   end
 
   test "Topological sort for a simple linear order" do
-    job1 = %Job{name: "A", command: "Command 1", dependencies: ["B"]}
-    job2 = %Job{name: "B", command: "Command 2", dependencies: ["C"]}
+    job1 = %Job{name: "A", command: "Command 1", requires: ["B"]}
+    job2 = %Job{name: "B", command: "Command 2", requires: ["C"]}
     job3 = %Job{name: "C", command: "Command 3"}
 
     graph = DependencyGraph.new([
@@ -112,10 +112,10 @@ defmodule DependencyGraphTests do
   end
 
   test "Finds the proper root nodes while topologically sorting" do
-    job1 = %Job{name: "A", command: "Command 1", dependencies: ["B", "C"]}
+    job1 = %Job{name: "A", command: "Command 1", requires: ["B", "C"]}
     job2 = %Job{name: "B", command: "Command 2"}
-    job3 = %Job{name: "C", command: "Command 3", dependencies: ["B", "E"]}
-    job4 = %Job{name: "D", command: "Command 4", dependencies: ["C"]}
+    job3 = %Job{name: "C", command: "Command 3", requires: ["B", "E"]}
+    job4 = %Job{name: "D", command: "Command 4", requires: ["C"]}
     job5 = %Job{name: "E", command: "Command 5"}
 
     graph = DependencyGraph.new([
@@ -140,9 +140,9 @@ defmodule DependencyGraphTests do
   end
 
   test "Reports an error if there is a cyclic dependency in the tasks" do
-    job1 = %Job{name: "A", command: "Command 1", dependencies: ["B"]}
-    job2 = %Job{name: "B", command: "Command 2", dependencies: ["C"]}
-    job3 = %Job{name: "C", command: "Command 3", dependencies: ["A"]}
+    job1 = %Job{name: "A", command: "Command 1", requires: ["B"]}
+    job2 = %Job{name: "B", command: "Command 2", requires: ["C"]}
+    job3 = %Job{name: "C", command: "Command 3", requires: ["A"]}
 
     graph = DependencyGraph.new([
       job1, job2, job3
