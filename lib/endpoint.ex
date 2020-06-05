@@ -12,7 +12,7 @@ defmodule JobServer.Endpoint do
 
   plug(:dispatch)
 
-  forward("/get_execution_order", to: JobServer.Router)
+  forward("/get_execution_order", to: JobServer.TaskOrderRouter)
 
   match _ do
     send_resp(conn, 404, "Requested page not found!")
