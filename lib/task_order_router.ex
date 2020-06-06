@@ -12,12 +12,19 @@ defmodule JobServer.TaskOrderRouter do
   # Finds the correct order of tasks and
   # encodes the result in the requested format
   defp get_correct_order(tasks, conn) do
-    response_type =
-      Enum.into(conn.req_headers, Map.new())
-      |> Map.get("accept")
-
     TaskOrderService.get_correct_order(for: tasks)
-    |> TaskOrderResultEncoder.encode(with: response_type)
+    |> TaskOrderResultEncoder.encode(with: response_type(conn))
+  end
+
+  defp response_type(conn) do
+    Enum.into(conn.req_headers, Map.new())
+        |> Map.get("accept")
+  end
+
+  defp wrong_request_body_response(conn) do
+    error = {:error, {"Expected Payload: { 'tasks': [...] }", []}}
+    {_, message} = TaskOrderResultEncoder.encode(error, with: response_type(conn))
+    message
   end
 
   post "/" do
@@ -31,7 +38,7 @@ defmodule JobServer.TaskOrderRouter do
           end
 
         _ ->
-          {422, Poison.encode!(%{error: "Expected Payload: { 'tasks': [...] }"})}
+          {422, wrong_request_body_response(conn)}
       end
 
     send_resp(conn, status, body)
