@@ -5,5 +5,6 @@ RUN export MIX_ENV=dev && \
     mix deps.get && \
     mix release
 
-#Set default entrypoint and command
+EXPOSE 3000
+
 ENTRYPOINT ["_build/dev/rel/job_server/bin/job_server", "start"]
