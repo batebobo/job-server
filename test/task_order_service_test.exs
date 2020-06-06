@@ -58,8 +58,17 @@ defmodule TaskOrderServiceTest do
             %JobTask{name: "C", command: "Command 3", requires: ["A"]}]
 
     case TaskOrderService.get_tasks_order(jobs) do
-      {:ok, _} -> assert(false, "Should have thrown an error")
-      {:error, _} -> assert true
+      {:cyclic_tasks_error, _} -> assert true
+      _ -> assert(false, "Should have thrown a :cyclic_tasks_error")
+    end
+  end
+
+  test "Reports an error if there is a requirement that does not exist" do
+    jobs = [%JobTask{name: "A", command: "Command 1", requires: ["B"]}]
+
+    case TaskOrderService.get_tasks_order(jobs) do
+      {:missing_task_requirements_error, _} -> assert true
+      _ -> assert(false, "Should have thrown an :incorrect_tasks_error")
     end
   end
 end

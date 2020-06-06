@@ -18,6 +18,10 @@ defmodule JobServer.Endpoint do
     send_resp(conn, 404, "Requested page not found!")
   end
 
+  @spec child_spec(any) :: %{
+          id: JobServer.Endpoint,
+          start: {JobServer.Endpoint, :start_link, [...]}
+        }
   def child_spec(opts) do
     %{
       id: __MODULE__,
@@ -25,6 +29,7 @@ defmodule JobServer.Endpoint do
     }
   end
 
+  @spec start_link(any) :: {:error, any} | {:ok, pid}
   def start_link(_opts) do
     Logger.info("Starting server at http://localhost:3000/")
     Plug.Cowboy.http __MODULE__, [], port: 3000
