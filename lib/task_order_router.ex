@@ -13,11 +13,20 @@ defmodule JobServer.TaskOrderRouter do
     "Cycles between tasks have been found"
   end
 
+  defp cycles_error_response(cycles) do
+    {cycles_error_message(), format_cycles(cycles)}
+  end
+
   defp incorrect_input_error_message do
     "The following tasks have incorrect format"
   end
 
-  defp get_correct_task_order(tasks_map) do
+  defp incorrect_tasks_error_response(incorrect_tasks) do
+    message = "#{incorrect_input_error_message()}. The listed task requirements do not exist:"
+    {message, Poison.encode!(incorrect_tasks)}
+  end
+
+  defp get_correct_order(for: tasks_map) do
     {correct_tasks, incorrect_tasks} = Enum.reduce(tasks_map, {[], []}, fn task, {correct, incorrect} ->
       if Map.has_key?(task, "name") && Map.has_key?(task, "command") do
         new_task = %JobTask{
@@ -32,16 +41,18 @@ defmodule JobServer.TaskOrderRouter do
     end)
 
     if not Enum.empty? incorrect_tasks do
-      {:error, :incorrect_format_error, {incorrect_input_error_message(), Poison.encode!(incorrect_tasks)}}
+      {:error, :incorrect_tasks_error, {incorrect_input_error_message(), Poison.encode!(incorrect_tasks)}}
     else
       case TaskOrderService.get_tasks_order(correct_tasks) do
-        {:error, cycles} -> {:error, :cyclic_tasks_error, {cycles_error_message(), format_cycles(cycles)}}
+        {:cyclic_tasks_error, cycles} -> {:error, :cyclic_tasks_error, cycles_error_response(cycles)}
+        {:incorrect_tasks_error, incorrect_tasks} ->
+          {:error, :incorrect_tasks_error, incorrect_tasks_error_response(incorrect_tasks)}
         result -> result
       end
     end
   end
 
-  defp encode(result, response_type) do
+  defp encode(result, with: response_type) do
     is_plain_text_requested = response_type == "text/plain"
     is_json_requested = response_type == "application/json"
     case result do
@@ -66,8 +77,8 @@ defmodule JobServer.TaskOrderRouter do
   defp process(tasks, conn) do
     response_type = Enum.into(conn.req_headers, Map.new)
       |> Map.get("accept")
-    get_correct_task_order(tasks)
-      |> encode(response_type)
+    get_correct_order(for: tasks)
+      |> encode(with: response_type)
   end
 
   post "/" do
@@ -76,7 +87,7 @@ defmodule JobServer.TaskOrderRouter do
         %{"tasks" => tasks} ->
           case process(tasks, conn) do
             {:ok, response} -> {200, response}
-            {:incorrect_format_error, error_message} -> {422, error_message}
+            {:incorrect_tasks_error, error_message} -> {422, error_message}
             {:cyclic_tasks_error, error_message} -> {400, error_message}
           end
         _ -> {422, Poison.encode!(%{error: "Expected Payload: { 'tasks': [...] }"})}
