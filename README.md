@@ -6,6 +6,10 @@
 1. `mix deps.get`
 2. `mix run --no-halt`
 
+## Docker setup
+1. `docker build -t job_server .`
+2. `docker run -p 3000:3000 -d job_server:latest`
+
 ## Endpoint(s)
 
 ### /get_execution_order
@@ -59,5 +63,8 @@ touch file_2
 ```
 
 **Possible error responses**
-* `422` if the request body is in incorrect format
+* `422`
+  * If the request body does not have "tasks" property
+  * If a required property is missing
+  * If there is a task requirement that does not exist in the list of tasks
 * `400` if there is a cyclic dependency between the tasks
